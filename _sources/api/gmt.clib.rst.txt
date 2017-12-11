@@ -1,0 +1,29 @@
+The ``gmt.clib`` module
+-----------------------
+
+.. raw:: html
+
+    <hr>
+
+.. automodule:: gmt.clib
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+  :toctree: ./
+
+  LibGMT
+
+
+
+
+
+
+
+
+
+
+
+

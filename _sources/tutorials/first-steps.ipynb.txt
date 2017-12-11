@@ -1,0 +1,374 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# First Steps with GMT/Python\n",
+    "\n",
+    "\n",
+    "This tutorial will get you started with the basic usage of GMT/Python.\n",
+    "Some of the examples shown here are from the [GMT Tutorial](http://gmt.soest.hawaii.edu/doc/latest/GMT_Tutorial.html#session-one).\n",
+    "\n",
+    "## Loading the library\n",
+    "\n",
+    "The GMT modules are available as functions and classes in the `gmt` Python package. \n",
+    "So we'll start by importing it:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import gmt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## A first map\n",
+    "\n",
+    "All figure generation in GMT/Python is handled by the `gmt.Figure` class. \n",
+    "It has methods to add layers to your figure, like a basemap, coastlines, and data."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We start a new figure by creating an instance of `gmt.Figure`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We add elements to the figure using its methods. For example, lets add the coastlines of Central America to a 6 inch wide map using the Mercator projection (`M`). Our figure will also have a nice frame with automatic ticks."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig.coast(region=[-90, -70, 0, 20], projection='M6i', land='chocolate', \n",
+    "          frame=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "You can see a preview of the figure directly in the [Jupyter notebook](http://jupyter.org) using `fig.show()`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To open a PDF preview of the figure using your default PDF viewer use:\n",
+    "\n",
+    "```python\n",
+    "fig.show(external=True)\n",
+    "```\n",
+    "\n",
+    "This is useful when using the Python shell or IPython terminal app. \n",
+    "However, **this command will not interrupt your Python process**. \n",
+    "So using it in a Python script will not work because the script will finish and delete the generated previews.\n",
+    "Use `fig.savefig` to save the figure to a file instead (see below)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## A note for experienced GMT users\n",
+    "\n",
+    "You'll probably have noticed several things that are different from classic command-line GMT.\n",
+    "Many of these changes reflect the new GMT [modern execution mode](http://gmt.soest.hawaii.edu/projects/gmt/wiki/Modernization) that will be part of the future 6.0 release.\n",
+    "A few are GMT/Python exclusive (like the long argument names).\n",
+    "\n",
+    "1. The name of method is `coast` instead of `pscoast`. As a general rule, all `ps*` modules had their `ps` removed. The exceptions are: `psxy == plot`, `psxyz == plot3d`, and `psscale == colorbar`.\n",
+    "2. The arguments don't use the GMT 1-letter syntax (R, J, B, etc). Those are still available as aliases and the methods will accept them (see below). \n",
+    "3. Arguments like `region` can take lists instead of strings like `1/2/3/4`. You can still use the string form but the list form is easier in Python.\n",
+    "4. If a GMT argument has no options (like `-B` instead of `-Baf`), use a `True` value instead. An empty string would also be acceptable.\n",
+    "5. There is no output redirecting to a PostScript file. The figure is generated in the background and will only be shown or saved when you ask for it."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We could have generated the figure above using the classic GMT argument names (but not the module names):"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig_alias = gmt.Figure()\n",
+    "fig_alias.coast(R='-90/-70/0/20', J='M6i', G='gray', S=\"blue\", B=True)\n",
+    "fig_alias.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Saving the figure\n",
+    "\n",
+    "Unlike the GMT command-line interface, **no figure file was generated until you ask for one**.  \n",
+    "That means that `fig.show` won't produce a figure file.\n",
+    "\n",
+    "Use method `fig.savefig` (based on the [matplotlib](https://matplotlib.org/) function) to save your figure:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig.savefig('first-steps-central-america.png')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If you're running a Python script, you can tell `fig.savefig` to open the figure in an external viewer:\n",
+    "\n",
+    "```python\n",
+    "fig.savefig('first-steps-central-america.png', show=True)\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Plotting point data\n",
+    "\n",
+    "We can use `gmt.Figure.plot` to plot data on our map.\n",
+    "\n",
+    "First, lets create some fake data to plot using numpy:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# See the random number generator so we always \n",
+    "# get the same numbers\n",
+    "np.random.seed(42)\n",
+    "\n",
+    "ndata = 100\n",
+    "region = [150, 240, -10, 60]\n",
+    "\n",
+    "# Create fake epicenter, magnitude, and depth values\n",
+    "lon = np.random.uniform(region[0], region[1], ndata)\n",
+    "lat = np.random.uniform(region[2], region[3], ndata)\n",
+    "magnitude = np.random.uniform(1, 9, ndata)\n",
+    "depth = np.random.uniform(1, 600, ndata)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now we can plot the data using `Figure.plot` and passing the coordinate arrays as the x and y arguments:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()\n",
+    "# Plot using a global region ('g') and an Othographic projection ('G')\n",
+    "fig.coast(region='g', projection='G200/20/6i', frame='ag', land='grey', \n",
+    "          water='white')\n",
+    "# Plot using circles (c) of 0.1 cm\n",
+    "fig.plot(x=lon, y=lat, style='c0.1c', color='black')\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can make the size of the markers follow the magnitude values by passing in the argument `sizes` to `Figure.plot`. We'll need to scale the magnitude (the size is in centimeters) and use a power law to actually see all the different sizes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()\n",
+    "fig.coast(region='g', projection='G200/20/6i', frame='g', \n",
+    "          land='grey', water='white')\n",
+    "fig.plot(x=lon, y=lat, sizes=0.01*(1.7**magnitude), style='cc', \n",
+    "         color='black')\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can also map the colors of the markers to the depths by passing an array to the `color` argument annd providing a colormap name (`cmap`). We can even use the new matplotlib colormap `\"viridis\"`. In order to highlight the depth range, we'll use the log10 of the depth instead."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "log_depth = np.log10(depth)\n",
+    "# We need to normalize the color because 'plot' can't \n",
+    "# autoscale the cmap to our data.\n",
+    "log_depth_norm = log_depth/log_depth.max()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()\n",
+    "fig.coast(region='g', projection='G200/20/6i', frame='g', \n",
+    "          land='grey', water='white')\n",
+    "fig.plot(x=lon, y=lat, sizes=0.01*(1.7**magnitude), style='cc', \n",
+    "         color=log_depth_norm, cmap='viridis')\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Plotting directly from a file\n",
+    "\n",
+    "Sometimes you'll have data in a file that you just want to plot without having to load it into Python. You can use the `data` argument to specify the file name instead `x` and `y`. GMT will take care of loading your data and plotting."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Save our fake data to a file.\n",
+    "np.savetxt('first-steps-data.txt', \n",
+    "           np.transpose([lon, lat, magnitude, depth]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can use the `columns` argument to control which columns we want to plot as x, y, color, and size, respectively. Adding `l` to a column will take the log10 of it and `sVALUE` will multiply it by that value. There are some limitations to this method on the kind of operations we can do with the data before plotting. For example, we can't use a power law for the magnitude."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()\n",
+    "# Make a Mercator map this time.\n",
+    "fig.coast(region=region, projection='M6i', frame='afg',\n",
+    "          land='white', water='skyblue')\n",
+    "fig.plot(data='first-steps-data.txt', style='cc', cmap='inferno', \n",
+    "         columns=[0, 1, '3ls0.36', '2s0.05'])\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Using sample data from GMT\n",
+    "\n",
+    "GMT ships some sample data that can be accessed by passing `@data_file` as the `data` argument. For example, we can plot the earthquake epicenters from the `tut_quakes.ngdc` sample dataset:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = gmt.Figure()\n",
+    "fig.coast(region=[130, 150, 35, 50], projection='M6i', \n",
+    "          frame='afg', shorelines=True, land='gray', \n",
+    "          water='lightblue')\n",
+    "fig.plot(data='@tut_quakes.ngdc', style='c0.3c', \n",
+    "         color='blue', columns=[4, 3])\n",
+    "fig.show()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
